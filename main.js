@@ -1,7 +1,7 @@
 class Field {
         constructor(domElt,ctn) {
                 this.domElt = domElt;
-                this.ctn = ctn;
+                this.ctn = ctn instanceof MouseEvent ? '' : ctn;
                 this.isBaseField = true;
                 this.init();
         }
@@ -23,8 +23,12 @@ class PKField extends Field {
 
         parsePK() {
                 const regex = /(\w+) PRIMARY/i;
-                let res = this.ctn.match(regex); 
-                this.primary = res[1];
+                if (this.ctn.length > 0) {
+                        let res = this.ctn.match(regex);
+                        if (res)
+                                this.primary = res[1];
+                }
+                
         }
 }
 
@@ -40,15 +44,19 @@ class FKField extends Field {
 
         parseFK() {
                 const regex = /(\w+) REFERENCE (\w+) \((\w+)\)/i;
-                let res = this.ctn.match(regex);
-                if(!res)
-                        throw `Foreign key [ ${this.ctn} ] is not well defined`
-                this.originField = res[1];
-                this.destTable = res[2];
-                this.destField = res[3];
+                if (this.ctn.length > 0) {
+                        let res = this.ctn.match(regex);
+                        if (!res)
+                                throw `Foreign key [ ${this.ctn} ] is not well defined`
+                        this.originField = res[1];
+                        this.destTable = res[2];
+                        this.destField = res[3];
+                }
+                
         }
 }
 
+// not use yet
 class KField extends Field {
         constructor(domElt, name) {
                 super(domElt, name);
@@ -605,7 +613,6 @@ class Cvs {
         }
 
         gapLinks(grip) {
-                // test 
                 let gap = 3;
                 let index = grip.table.id;
                 if (this.linkPaths[index] === undefined) {
@@ -617,11 +624,10 @@ class Cvs {
                         this.linkPaths[index][grip.type]++;
                         let count = this.linkPaths[index][grip.type] -1;
                         if (count >= 0) {
-                                if (count % 2 === 0) {
+                                if (count % 2 === 0)
                                         return gap * count;
-                                }  else {
+                                else
                                         return - gap * count;
-                                }
                         } 
                 }
                 return 0;
