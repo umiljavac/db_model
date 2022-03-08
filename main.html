@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+        <head>
+                <meta charset="utf-8"/>
+                <title>Diagrams</title>
+                <link rel="stylesheet" href="main.css"></link>
+                
+        </head>
+
+        <body>
+                <div id="app">
+                        <input id="redraw_links" type="hidden">
+                        <canvas id="canvas"></canvas>
+
+                        <div id="app_body">
+                                <div id="menus">
+                                        <div class="menu-opt" id="add_table">Table</div>
+                                        <div class="menu-opt" id="add_field">Field</div>
+                                        <div class="menu-opt" id="add_pk">PKey</div>
+                                        <div class="menu-opt" id="add_fk">FKey</div>
+                                        <div class="menu-opt" id="add_cvs">Link</div>
+
+                                </div>
+                                <div id="sketch"></div>
+                        </div>
+                        <div id="curr_tbl_infos"></div>
+
+                </div>
+                <script src="table.js"></script>
+                <script src="prd_tables.js"></script>
+                <script src="main.js"></script>
+        </body>
+
+</html>
