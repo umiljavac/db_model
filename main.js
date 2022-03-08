@@ -5,6 +5,7 @@ class Field {
                 this.isBaseField = true;
                 this.init();
         }
+
         init() {
                 this.domElt.addEventListener('input', (e) => {
                         this.ctn = e.target.innerHTML;
@@ -19,6 +20,7 @@ class PKField extends Field {
                 this.primary = undefined;
                 this.parsePK()
         }
+
         parsePK() {
                 const regex = /(\w+) PRIMARY/i;
                 let res = this.ctn.match(regex); 
@@ -34,7 +36,7 @@ class FKField extends Field {
                 this.destTable = undefined;
                 this.destField = undefined;
                 this.parseFK();
-        } 
+        }
 
         parseFK() {
                 const regex = /(\w+) REFERENCE (\w+) \((\w+)\)/i;
@@ -58,13 +60,12 @@ class FieldCollection extends Array {
         constructor(...items) {
                 super(...items)
         }
+
         add(field) {
                 if(field instanceof Field)
                         this.push(field);
         }
 }
-
-
 
 class TableCollection extends Array {
         constructor(sketch,...items) {
@@ -74,6 +75,7 @@ class TableCollection extends Array {
                 this.currentRowCountTables = 0;
                 this.redraw = document.getElementById('redraw_links');
         }
+
         add(tableName) {
                 //this.adjustTablePositionOnDataParse(table);
 
@@ -95,23 +97,22 @@ class TableCollection extends Array {
                 });
                 return table;
         }
+
         getNewIndex() {
                 return this.length;
         }
+
         dragElement(elt) {
                 const me = this;
-
                 let pX, pY; 
                 let index = elt.getAttribute('index');
                 const table = this[index];
                 elt.querySelector('.tbl-selector').onmousedown = dragMouseDown;
               
                 function dragMouseDown(e) {
-                        
                         e.preventDefault();
                         pX = e.offsetX - window.scrollX;
                         pY = e.offsetY - window.scrollY;
-
                         document.onmouseup = closeDragElement;
                         document.onmousemove = elementDrag;
                         // send event to clear canvas
@@ -121,13 +122,10 @@ class TableCollection extends Array {
               
                 function elementDrag(e) {
                         e.preventDefault();
-                        
                         me.showTblInfos(index);
                         table.refreshSizeAndPosition();
-                        elt.style.left = (e.clientX - pX - 7) + "px";                        
-                        elt.style.top = (e.clientY - pY + 10) + "px";
-
-                       
+                        elt.style.left = (e.clientX - pX - 7) + "px";  // Oo                      
+                        elt.style.top = (e.clientY - pY + 10) + "px"; // oO
                 }
               
                 function closeDragElement() {
@@ -184,7 +182,6 @@ class TableCollection extends Array {
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.pk-fields').appendChild(field);
                         this.cur_tbl.pkFields.add(new PKField(field,ctn));
-
                 } else {
                         throw 'no table selected';
                 }
@@ -196,7 +193,6 @@ class TableCollection extends Array {
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.fk-fields').appendChild(field);
                         this.cur_tbl.fkFields.add(new FKField(field,ctn));
-
                 } else {
                         throw 'no table selected';
                 }
@@ -207,20 +203,17 @@ class TableCollection extends Array {
                 if(this.length === 1) {
                         table.proxy.x = table.x;
                         table.proxy.y = table.y;
-
                 }
                 if(this[table.index - 1] != undefined) {
                         const prevTbl = this[table.index - 1];
                         if (prevTbl.x + margin + prevTbl.width + table.width > window.innerWidth) {
-                                        let highestTbl = this.getHighestPrevTbl(this.currentRowCountTables,prevTbl.index);
-                                        this.currentRowCountTables = table.index;
-
-                                        table.proxy.x = table.x;
-                                        table.proxy.y = highestTbl.height + prevTbl.y + margin;
-
+                                let highestTbl = this.getHighestPrevTbl(this.currentRowCountTables,prevTbl.index);
+                                this.currentRowCountTables = table.index;
+                                table.proxy.x = table.x;
+                                table.proxy.y = highestTbl.height + prevTbl.y + margin;
                         } else {
-                                        table.proxy.x = prevTbl.width + prevTbl.x + margin;
-                                        table.proxy.y = prevTbl.y;
+                                table.proxy.x = prevTbl.width + prevTbl.x + margin;
+                                table.proxy.y = prevTbl.y;
                         } 
                 }
         }
@@ -248,6 +241,7 @@ class TableCollection extends Array {
                 })
                 return match;
         }
+
         refreshAllPosition() {
                 this.forEach( (tbl) => {
                         tbl.refreshSizeAndPosition();
@@ -263,8 +257,8 @@ class BaseGrip {
                 this.table.tbl.appendChild(this.grip);
                 this.refPos = {};
         }
-
 }
+
 class TopGrip extends BaseGrip {
         constructor(table) {
                 super(table);
@@ -284,10 +278,9 @@ class TopGrip extends BaseGrip {
 
                 this.refPos.x = this.table.x + posX + this.width / 2;
                 this.refPos.y = this.table.y;
-                
-
         }
 }
+
 class BottomGrip extends BaseGrip {
         constructor(table) {
                 super(table);
@@ -296,19 +289,21 @@ class BottomGrip extends BaseGrip {
                 this.type = 'bottom'
                 this.init();
         }
+
         init() {
                 this.grip.classList.add('h-grip');
                 this.refresh();
         }
+
         refresh() {
                 this.grip.style.top = this.table.height + 'px';
                 let posX = this.table.width / 2 - this.width / 2;
                 this.grip.style.left = posX + 'px';
-
                 this.refPos.x = this.table.x + posX + this.width / 2;
                 this.refPos.y = this.table.y + this.table.height;
         }
 }
+
 class LeftGrip extends BaseGrip {
         constructor(table) {
                 super(table);
@@ -317,15 +312,16 @@ class LeftGrip extends BaseGrip {
                 this.type = 'left';
                 this.init();
         }
+
         init() {
                 this.grip.classList.add('w-grip');
                 this.refresh();
         }
+
         refresh() {
                 let posY = this.table.height / 2 - this.height / 2;
                 this.grip.style.top = posY + 'px';
                 this.grip.style.left = - this.width + 'px';
-                
                 this.refPos.x = this.table.x;
                 this.refPos.y = this.table.y + this.table.height / 2;
         }
@@ -339,15 +335,16 @@ class RightGrip extends BaseGrip {
                 this.type = 'right';
                 this.init();
         }
+
         init() {
                 this.grip.classList.add('w-grip');
                 this.refresh();
         }
+
         refresh() {
                 let posY = this.table.height / 2 - this.height / 2;
                 this.grip.style.top = posY + 'px';
                 this.grip.style.left = this.table.width + 'px';
-
                 this.refPos.x = this.table.x + this.table.width;
                 this.refPos.y = this.table.y + this.table.height / 2;
         }
@@ -375,37 +372,37 @@ class Table {
                 this.build(index);
                 this.buildGrips();
         }
+
         initProxy() {
                 this.proxy = new Proxy(this, {
                         get(target, prop ) {
                                 return target[prop];
                         },
                         set(target, prop, value) {
-                                if(prop === 'x') {
+                                if(prop === 'x')
                                         target.tbl.style.left = value + 'px';
-                                }
-                                if(prop === 'y') {
+                                if(prop === 'y')
                                         target.tbl.style.top = value + 'px';
-                                }
                                 target[prop] = value;
                                 return true;
                         }
                 })
         }
+
         build(index) {
                 this.tbl = this.tableTemplate(this.name);
                 this.tbl.setAttribute('index', index);
                 this.sketch.appendChild(this.tbl);
                 this.refreshSizeAndPosition();
         }
+
         buildGrips() {
                 this.grips.top = new TopGrip(this);
                 this.grips.bottom = new BottomGrip(this);
                 this.grips.left = new LeftGrip(this);
                 this.grips.right = new RightGrip(this);
-
-
         }
+
         highlightPrimaryKey() {
                 this.pkFields.forEach( (pkf) => {
                         let regex = new RegExp(`^${pkf.primary} `)
@@ -416,6 +413,7 @@ class Table {
                         })
                 });
         }
+
         refreshSizeAndPosition() {
                 let pos = this.tbl.getBoundingClientRect();
                 this.x = pos.x + window.scrollX;
@@ -424,8 +422,7 @@ class Table {
                 this.height = this.tbl.offsetHeight;
                 for (let [k,v] of Object.entries(this.grips)) {
                         v.refresh();
-                }
-                
+                }  
         }
         
         getPos() {
@@ -437,6 +434,7 @@ class Table {
                         height: this.height
                 }
         }
+
         tableTemplate (tableName) {
                 const tbl = document.createElement('div');
                 tbl.classList.add('common-tbl');
@@ -473,18 +471,15 @@ class Table {
                 return tbl;
         }
 }
+
 const uml = {
         add_tbl: document.getElementById('add_table'),
         add_field: document.getElementById('add_field'),
         add_pk: document.getElementById('add_pk'),
         add_fk: document.getElementById('add_fk'),
         add_cvs: document.getElementById('add_cvs'),
-
         sketch: document.getElementById('sketch'),
-
         tables: new TableCollection(this.sketch),
-        tbl_gap: 50,
-
         cvs: undefined,
 
         initCanvas: function() {
@@ -493,15 +488,15 @@ const uml = {
         
         canvasToggle: function() {
                 this.cvs.on = !this.cvs.on;
-                if(this.cvs.on) {
+                if (this.cvs.on) {
                         this.add_cvs.classList.add('on');
                         this.cvs.c.style.zIndex = 1;
-                }
-                else {
+                } else {
                         this.cvs.c.style.zIndex = 0;
                         this.add_cvs.classList.remove('on');
                 }
         },
+
         listenMenus: function() {
                 this.add_tbl.addEventListener('click', this.tables.add.bind(this.tables));
                 this.add_field.addEventListener('click', this.tables.addField.bind(this.tables));
@@ -538,7 +533,6 @@ const uml = {
                 }
 
                 this.tables.cur_tbl = undefined;
-
                 this.tables.refreshAllPosition();
         }
 }
@@ -556,39 +550,22 @@ class Cvs {
                 this.linkPaths = {};
                 this.init();
         }
+
         init() {
                 if (this.c.getContext) {
 
                         this.c.setAttribute('width',this.width);
                         this.c.setAttribute('height',this.height);
-
                         this.ctx = this.c.getContext('2d');
-
-                        //this.listenLines();
                         this.initJoins();
                         this.listenRedrawEvents();
                 }
         }
+
         randColor() {
                 return Math.floor(Math.random()*16777215).toString(16);     
         }
-        /*
-        listenLines() {
-                this.c.addEventListener('mousedown', (e) => {
-                        if(this.on) {
-                                
-                                this.ctx.lineWidth = 2;
-                                this.ctx.beginPath();
-                                this.ctx.moveTo(e.clientX, e.clientY );
-                                this.ctx.lineTo(105, 25);
-
-                                this.ctx.lineTo(45, 125);
-                                //this.ctx.closePath();
-                                this.ctx.stroke();
-                        }
-                })
-        } */
-
+        
         initJoins() {
                 this.linkPaths = {};
                 this.tables.forEach(tbl => {
@@ -596,17 +573,14 @@ class Cvs {
                                 tbl.fkJoinColor = '#' + this.randColor();
 
                         this.ctx.strokeStyle = tbl.fkJoinColor;
-
                         tbl.fkFields.forEach( (fk) => {
-
                                 let destTable = this.tables.find(fk.destTable);
                                 if(destTable) {
                                         // shorter path
                                         let shorter = this.getGripShorterPath(tbl, destTable);
-                                        // test
+
                                         let gapFrom = this.gapLinks(shorter[0]);
                                         let gapDest = this.gapLinks(shorter[1]);
-                                        //
                                         
                                         this.ctx.lineWidth = 2;
                                         this.ctx.beginPath();
@@ -627,7 +601,6 @@ class Cvs {
                                         this.ctx.closePath();
                                 }
                         }); 
-                       
                 });
         }
 
@@ -652,14 +625,13 @@ class Cvs {
                         } 
                 }
                 return 0;
-                
         }
 
         getGripShorterPath(table, destTable) {
-                
                 function distance(g, dg) {
                         return Math.sqrt((Math.pow((dg.refPos.x - g.refPos.x),2) + Math.pow((dg.refPos.y - g.refPos.y), 2)));
                 }
+
                 let shorterTableGrip = table.grips.top;
                 let shorterDestTableGrip = destTable.grips.top;
                 let compare = distance(shorterTableGrip, shorterDestTableGrip);
@@ -677,6 +649,7 @@ class Cvs {
 
                 return [shorterTableGrip, shorterDestTableGrip];
         }
+
         listenRedrawEvents() {
                 const me = this;
                 this.redraw.addEventListener('redraw', function(e) {
@@ -686,11 +659,11 @@ class Cvs {
                                 me.initJoins();
                 });
         }
+
         clearCanvas() {
                 this.ctx.clearRect(0,0,this.width, this.height);
         }
 }
-
 
 window.addEventListener('load', function() {
         uml.listenMenus();
