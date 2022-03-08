@@ -1,0 +1,7 @@
+*.js
+!main.js
+!db.js
+*.html
+!main.html
+*.txt
+.DS_Store

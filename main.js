@@ -694,6 +694,6 @@ class Cvs {
 
 window.addEventListener('load', function() {
         uml.listenMenus();
-        uml.parseData(db_prd_tables);
+        uml.parseData(db);
         uml.initCanvas();
 })
