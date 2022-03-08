@@ -28,7 +28,6 @@ class PKField extends Field {
                         if (res)
                                 this.primary = res[1];
                 }
-                
         }
 }
 
@@ -51,8 +50,7 @@ class FKField extends Field {
                         this.originField = res[1];
                         this.destTable = res[2];
                         this.destField = res[3];
-                }
-                
+                }   
         }
 }
 
@@ -178,9 +176,8 @@ class TableCollection extends Array {
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.tbl-fields').appendChild(field);
                         this.cur_tbl.fields.add(new Field(field,ctn))
-                } else {
+                } else
                         throw 'no table selected';
-                }
         }
 
         addPrimaryKey(ctn) {
@@ -190,10 +187,10 @@ class TableCollection extends Array {
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.pk-fields').appendChild(field);
                         this.cur_tbl.pkFields.add(new PKField(field,ctn));
-                } else {
+                } else
                         throw 'no table selected';
-                }
         }
+
         addForeignKey(ctn) {
                 if(this.cur_tbl !== undefined) {
                         const field = document.createElement('span');
@@ -201,9 +198,8 @@ class TableCollection extends Array {
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.fk-fields').appendChild(field);
                         this.cur_tbl.fkFields.add(new FKField(field,ctn));
-                } else {
+                } else
                         throw 'no table selected';
-                }
         }
 
         adjustTablePositionOnDataParse(table) {
@@ -245,15 +241,15 @@ class TableCollection extends Array {
                 let match = undefined;
                 this.forEach( (tbl) => {
                         if (tbl.id === id) 
-                        match = tbl 
-                })
+                                match = tbl;
+                });
                 return match;
         }
 
         refreshAllPosition() {
                 this.forEach( (tbl) => {
                         tbl.refreshSizeAndPosition();
-                })
+                });
         }
 }
 
