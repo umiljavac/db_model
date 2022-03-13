@@ -1,8 +1,29 @@
+class FlashMsg {
+        constructor() {
+                this.flash = document.getElementById('flash_msg');
+        }
+        
+        show(msgType,content) {
+                this.flash.innerHTML = content;
+                this.flash.classList.add(msgType);
+                this.remove();
+        }
+        remove() {
+                setTimeout( () => {
+                        this.flash.innerHTML = '';
+                        this.flash.classList.remove('error', 'success', 'info');
+                }, 4000)
+           
+        }
+}
+
 class Field {
-        constructor(domElt,ctn) {
+        constructor(flashMsg, domElt, ctn) {
+                this.flashMsg = flashMsg;
                 this.domElt = domElt;
                 this.ctn = ctn instanceof MouseEvent ? '' : ctn;
-                this.isBaseField = true;
+                this.isCreated = false; // wip
+                this.isRegistered = false; // wip
                 this.init();
         }
 
@@ -11,45 +32,88 @@ class Field {
                         this.ctn = e.target.innerHTML;
                 })
         }
+        debounce(callback, wait) {
+                let timeout;
+                return (...args) => {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(function () { callback.apply(this, args); }, wait);
+                };
+        }     
 }
 
 class PKField extends Field {
-        constructor(domElt, name) {
-                super(domElt, name);
-                this.isPKField = true;
+        constructor(flashMsg, domElt, name) {
+                super(flashMsg, domElt, name);
                 this.primary = undefined;
-                this.parsePK()
+                this.parsePK();
+        }
+        init() {
+                this.domElt.addEventListener('input', (e) => {
+                        this.ctn = e.target.innerHTML;
+                })
+                this.domElt.addEventListener('input', this.debounce( () => {
+                        if (this.parsePK()) {
+                                this.flashMsg.show('success', 'Primary key has been defined');
+                                const refreshPkLsitener = this.domElt.parentNode.parentNode;
+                                const refreshPk = new Event('refreshPk');
+                                refreshPkLsitener.dispatchEvent(refreshPk);
+                        } else {
+                                this.flashMsg.show('error', 'Primary key is not well defined')
+                        }
+               }, 3000))
         }
 
         parsePK() {
                 const regex = /(\w+) PRIMARY/i;
                 if (this.ctn.length > 0) {
                         let res = this.ctn.match(regex);
-                        if (res)
+                        if (res) {
                                 this.primary = res[1];
+                                return true;
+                        } else 
+                                return false;
                 }
         }
 }
 
 class FKField extends Field {
-        constructor(domElt, name) {
-                super(domElt, name);
-                this.isFKField = true;
+        constructor(flashMsg, domElt, name) {
+                super(flashMsg, domElt, name);
                 this.originField = undefined;
                 this.destTable = undefined;
                 this.destField = undefined;
                 this.parseFK();
         }
+        init() {
+                this.domElt.addEventListener('input', (e) => {
+                        this.ctn = e.target.innerHTML;
+                })
+                this.domElt.addEventListener('input', this.debounce( () => {
+                        if (this.parseFK()) {
+                                const redrawLinks = document.getElementById('redraw_links');
+                                const redraw = new CustomEvent('redraw', { detail: 'clearAndJoins' } );
+                                redrawLinks.dispatchEvent(redraw);
+                        } else {
+                                this.flashMsg.show('error', 'Foreign key is not well defined')
+                        }
+               }, 3000))
+        }
 
         parseFK() {
-                const regex = /(\w+) REFERENCE (\w+) \((\w+)\)/i;
+                const regex = /(\w+) REFERENCES (\w+) \((\w+)\)/i;
                 if (this.ctn.length > 0) {
                         let res = this.ctn.match(regex);
-                        if (!res)
-                                throw `Foreign key [ ${this.ctn} ] is not well defined`
+                        if (!res) {
+                                this.originField = undefined;
+                                this.destTable = undefined;
+                                this.destField = undefined;
+                                return false;
+                        }
+
                         this.originField = res[1];
                         this.destTable = res[2];
                         this.destField = res[3];
+                        return true;
                 }   
         }
 }
@@ -80,14 +144,15 @@ class TableCollection extends Array {
                 this.cur_tbl = undefined;
                 this.currentRowCountTables = 0;
                 this.redraw = document.getElementById('redraw_links');
+                this.flashMsg = new FlashMsg();
         }
 
         add(tableName) {
-                //this.adjustTablePositionOnDataParse(table);
 
                 let checkName = tableName instanceof MouseEvent ? '' : tableName;
+                
                 const index = this.getNewIndex();
-                const table = new Table(index, this.sketch, checkName);
+                const table = new Table(this.flashMsg, index, this.sketch, checkName);
 
                 this.push(table);
 
@@ -101,6 +166,11 @@ class TableCollection extends Array {
                         this.cur_tbl = table;
                         this.showTblInfos(table.tbl.getAttribute('index'));
                 });
+                if (tableName instanceof MouseEvent) {
+                        this.adjustTablePositionOnDataParse(table);
+                        table.tbl.querySelector('.tbl-selector').click();
+                }
+
                 return table;
         }
 
@@ -175,7 +245,7 @@ class TableCollection extends Array {
                         field.classList.add('tbl-field');
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.tbl-fields').appendChild(field);
-                        this.cur_tbl.fields.add(new Field(field,ctn))
+                        this.cur_tbl.fields.add(new Field(this.flashMsg, field, ctn))
                 } else
                         throw 'no table selected';
         }
@@ -186,7 +256,7 @@ class TableCollection extends Array {
                         field.classList.add('pk-field');
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.pk-fields').appendChild(field);
-                        this.cur_tbl.pkFields.add(new PKField(field,ctn));
+                        this.cur_tbl.pkFields.add(new PKField(this.flashMsg, field, ctn));
                 } else
                         throw 'no table selected';
         }
@@ -197,7 +267,7 @@ class TableCollection extends Array {
                         field.classList.add('fk-field');
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.fk-fields').appendChild(field);
-                        this.cur_tbl.fkFields.add(new FKField(field,ctn));
+                        this.cur_tbl.fkFields.add(new FKField(this.flashMsg, field,ctn));
                 } else
                         throw 'no table selected';
         }
@@ -355,7 +425,8 @@ class RightGrip extends BaseGrip {
 }
 
 class Table {
-        constructor(index, sketch, tableName) {
+        constructor(flashMsg, index, sketch, tableName) {
+                this.flashMsg = flashMsg;
                 this.sketch = sketch;
                 this.tbl = undefined;
                 this.id = tableName;
@@ -442,9 +513,13 @@ class Table {
         tableTemplate (tableName) {
                 const tbl = document.createElement('div');
                 tbl.classList.add('common-tbl');
-
+                // listen refreshPk events
+                tbl.addEventListener('refreshPk', () => {
+                        this.highlightPrimaryKey();
+                });
                 const selector = document.createElement('div');
                 selector.classList.add('tbl-selector');
+               
                 tbl.appendChild(selector);
 
                 const name = document.createElement('div');
@@ -510,21 +585,21 @@ const uml = {
         },
 
         parseData: function(datas) {
-                for( let [k,v] of Object.entries(datas)) {
+                for (let [k,v] of Object.entries(datas)) {
                         let table = this.tables.add(k);
                         this.tables.cur_tbl = table;
                         
-                        if(v.fields !== undefined) {
+                        if (v.fields !== undefined) {
                                 for (let [field, desc] of Object.entries(v.fields)) {
                                         this.tables.addField(field + ' ' + desc);
                                 }
                         }
-                        if(v.pks != undefined) {
+                        if (v.pks != undefined) {
                                 for (let [field, desc] of Object.entries(v.pks)) {
                                         this.tables.addPrimaryKey(field + ' ' + desc);
                                 }
                         }
-                        if(v.fks !== undefined) {
+                        if (v.fks !== undefined) {
                                 for (let [field, desc] of Object.entries(v.fks)) {
                                         this.tables.addForeignKey(field + ' ' + desc);
                                 }
@@ -557,7 +632,6 @@ class Cvs {
 
         init() {
                 if (this.c.getContext) {
-
                         this.c.setAttribute('width',this.width);
                         this.c.setAttribute('height',this.height);
                         this.ctx = this.c.getContext('2d');
@@ -573,6 +647,7 @@ class Cvs {
         initJoins() {
                 this.linkPaths = {};
                 this.tables.forEach(tbl => {
+                        tbl.refreshSizeAndPosition(); // needed for dynamic keys after FKField added 
                         if(tbl.fkJoinColor === undefined) 
                                 tbl.fkJoinColor = '#' + this.randColor();
 
@@ -659,6 +734,10 @@ class Cvs {
                                 me.clearCanvas();
                         if(e.detail === 'initJoins')
                                 me.initJoins();
+                        if(e.detail === 'clearAndJoins') {
+                                me.clearCanvas();
+                                me.initJoins();
+                        }
                 });
         }
 

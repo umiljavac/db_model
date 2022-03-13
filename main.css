@@ -101,11 +101,10 @@ body {
         cursor: pointer;
         background-color: white;
 }
-x
 #curr_tbl_infos {
         position: fixed;
         height: 40px;
-        width: 265px;
+        width: 280px;
         background-color: white;
         right: 0px;
         top: 0px;
@@ -146,4 +145,32 @@ x
 .w-grip {
         width: 20px;
         height: 40px;
+}
+/** MSG **/
+#flash_msg {
+        position: fixed;
+        bottom: 5px;
+        left: 5px;
+        height: 50px;
+        min-width: 280px;
+        width: auto;
+        display: none;
+        transition: 0.5s;
+        border-radius: 5px;
+        opacity: 0;
+}
+#flash_msg.error {
+        background-color: crimson;
+        color: white;
+}
+#flash_msg.success {
+        background-color: #3aee67;
+        color: white;
+}
+#flash_msg.success, #flash_msg.error, #flash_msg.info {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: 0.5s;
+        opacity: 1;
 }

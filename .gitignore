@@ -5,3 +5,4 @@
 !main.html
 *.txt
 .DS_Store
+*.twig

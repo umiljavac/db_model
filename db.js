@@ -15,9 +15,9 @@ const db = {
                         id: 'PRIMARY'
                 },
                 fks: {
-                        user_id: 'REFERENCE users (id)',
-                        client_type_id: 'REFERENCE client_types (id)',
-                        client_infos_id: 'REFERENCE client_infos (id)'
+                        user_id: 'REFERENCES users (id)',
+                        client_type_id: 'REFERENCES client_types (id)',
+                        client_infos_id: 'REFERENCES client_infos (id)'
                 }
         },
         
