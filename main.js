@@ -13,7 +13,6 @@ class FlashMsg {
                         this.flash.innerHTML = '';
                         this.flash.classList.remove('error', 'success', 'info');
                 }, 4000)
-           
         }
 }
 
@@ -39,6 +38,26 @@ class Field {
                         timeout = setTimeout(function () { callback.apply(this, args); }, wait);
                 };
         }     
+}
+
+class TableNameField extends Field {
+        constructor(flashMsg, domElt, name) {
+                super(flashMsg, domElt, name);
+                this.init();
+        }
+
+        init() {
+                this.domElt.addEventListener('input', (e) => {
+                        this.ctn = e.target.innerHTML;
+                        this.table_id = this.ctn;
+                        const refreshIdLsitener = this.domElt.parentNode.parentNode;
+                        const refreshId = new Event('refreshId');
+                        refreshIdLsitener.dispatchEvent(refreshId);
+                        const redrawLinks = document.getElementById('redraw_links');
+                        const redraw = new CustomEvent('redraw', { detail: 'clearAndJoins' } );
+                        redrawLinks.dispatchEvent(redraw);
+                })
+        }   
 }
 
 class PKField extends Field {
@@ -245,7 +264,7 @@ class TableCollection extends Array {
                         field.classList.add('tbl-field');
                         this.setCommonFieldAttribute(field,ctn);
                         this.cur_tbl.tbl.querySelector('.tbl-fields').appendChild(field);
-                        this.cur_tbl.fields.add(new Field(this.flashMsg, field, ctn))
+                        this.cur_tbl.fields.add(new Field(this.flashMsg, field, ctn));
                 } else
                         throw 'no table selected';
         }
@@ -488,6 +507,14 @@ class Table {
                         })
                 });
         }
+        highlightField(field) {
+                let regex = new RegExp(`^${field} `)
+                this.fields.forEach( f => {
+                        if (f.ctn.match(regex) ) {
+                                f.domElt.classList.add('field-in-views'); 
+                        }
+                });
+        }
 
         refreshSizeAndPosition() {
                 let pos = this.tbl.getBoundingClientRect();
@@ -510,6 +537,10 @@ class Table {
                 }
         }
 
+        refreshId() {
+                this.id = this.name.ctn;
+        }
+
         tableTemplate (tableName) {
                 const tbl = document.createElement('div');
                 tbl.classList.add('common-tbl');
@@ -517,23 +548,41 @@ class Table {
                 tbl.addEventListener('refreshPk', () => {
                         this.highlightPrimaryKey();
                 });
+                tbl.addEventListener('refreshId', () => {
+                        this.refreshId();
+                });
                 const selector = document.createElement('div');
                 selector.classList.add('tbl-selector');
                
                 tbl.appendChild(selector);
-
+                
                 const name = document.createElement('div');
                 name.classList.add('tbl-name');
                 tbl.appendChild(name);
 
+                /*
                 const nameIn = document.createElement('span');
                 nameIn.classList.add('tbl-input');
                 nameIn.setAttribute('contenteditable', true);
                 nameIn.setAttribute('autocorrect','off');
                 nameIn.setAttribute('spellcheck',"false");
-                nameIn.innerHTML = tableName;
+                nameIn.innerHTML = tableName; */
 
-                name.appendChild(nameIn);
+                const tblName = document.createElement('span');
+                tblName.classList.add('tbl-input');
+                tblName.setAttribute('contenteditable', true);
+                tblName.setAttribute('autocorrect','off');
+                tblName.setAttribute('spellcheck',"false");
+                tblName.innerHTML = tableName;
+
+                
+                this.name = new TableNameField(this.flashMsg, tblName, tableName);
+
+                name.appendChild(tblName);
+
+                //////////
+
+                //name.appendChild(nameIn);
 
                 const fields = document.createElement('div');
                 fields.classList.add('tbl-fields');
@@ -584,7 +633,7 @@ const uml = {
                 this.add_cvs.addEventListener('click', this.canvasToggle.bind(this));
         },
 
-        parseData: function(datas) {
+        parseData: function(datas, highlightWorkDone) {
                 for (let [k,v] of Object.entries(datas)) {
                         let table = this.tables.add(k);
                         this.tables.cur_tbl = table;
@@ -592,6 +641,11 @@ const uml = {
                         if (v.fields !== undefined) {
                                 for (let [field, desc] of Object.entries(v.fields)) {
                                         this.tables.addField(field + ' ' + desc);
+                                        if (v.fviews) {
+                                                for (let f of v.fviews) {
+                                                        this.tables.cur_tbl.highlightField(f);
+                                                }
+                                        } 
                                 }
                         }
                         if (v.pks != undefined) {
@@ -602,6 +656,13 @@ const uml = {
                         if (v.fks !== undefined) {
                                 for (let [field, desc] of Object.entries(v.fks)) {
                                         this.tables.addForeignKey(field + ' ' + desc);
+                                }
+                        }
+                        if (highlightWorkDone) {
+                                if (v.inViews) {
+                                        this.tables.cur_tbl.tbl.classList.add('in-views');
+                                } else if (v.inDb) {
+                                        this.tables.cur_tbl.tbl.classList.add('in-db');
                                 }
                         }
 
@@ -719,7 +780,7 @@ class Cvs {
                                 if (dis < compare) {
                                         compare = dis;
                                         shorterTableGrip = g;
-                                        shorterDestTableGrip = dg
+                                        shorterDestTableGrip = dg;
                                 }
                         } 
                 }
@@ -748,6 +809,6 @@ class Cvs {
 
 window.addEventListener('load', function() {
         uml.listenMenus();
-        uml.parseData(db);
+        uml.parseData(db, true);
         uml.initCanvas();
 })

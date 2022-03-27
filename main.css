@@ -174,3 +174,14 @@ body {
         transition: 0.5s;
         opacity: 1;
 }
+/** personal work **/
+.in-db {
+        border: 3px solid #256dac !important;
+}
+.in-views {
+        border: 3px solid #25ac4d !important;
+}
+
+.field-in-views::after {
+       content: ' \1F4DF' 
+}
